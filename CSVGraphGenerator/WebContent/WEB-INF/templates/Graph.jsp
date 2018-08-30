@@ -50,6 +50,8 @@
 						<div id="slider-range"></div>
 					</div>
 				</div>
+				<br/>
+				<a href="home.htm">&lt; Use different CSV</a>
 			</td>
 		</tr>	
 	</table>		

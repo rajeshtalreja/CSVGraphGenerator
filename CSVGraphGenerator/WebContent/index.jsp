@@ -1,3 +1,3 @@
 <%
-  response.sendRedirect("/home.htm");
+  response.sendRedirect("home.htm");
 %>

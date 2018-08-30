@@ -108,7 +108,7 @@ public class MainPageController {
 		List<CSVRecord> records = CSVRecordCache.getCSVRecordList(ticker);
 		
 		if(records == null || records.size() == 0){
-			return "";
+			return "var csvResult = [];";
 		}
 		records = records.stream().filter(r->{
 			
