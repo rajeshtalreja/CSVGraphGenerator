@@ -4,8 +4,11 @@
 package com.csvgraphgenerator.controllers;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -98,12 +101,29 @@ public class MainPageController {
 		//End time
 		String endTime = req.getParameter("endTime");
 		
-		String[] startTimeSplit = startTime.split(":");
-		String[] endTimeSplit = endTime.split(":");
+		double startTimeInSeconds = getSecondsFromTimeInput(startTime);
 		
-		//Start time in seconds
-		Long startTimeInSeconds = Integer.parseInt(startTimeSplit[0]) * 60L * 60L + Integer.parseInt(startTimeSplit[1]) * 60L ;//+ Integer.parseInt(startTimeSplit[2]);
-		Long endTimeInSeconds = Integer.parseInt(endTimeSplit[0]) * 60L * 60L + Integer.parseInt(endTimeSplit[1]) * 60L ;//+ Integer.parseInt(endTimeSplit[2]);
+		double endTimeInSeconds = getSecondsFromTimeInput(endTime);
+		
+		String increment = req.getParameter("increment");
+		
+		boolean isIncrementProvided = true;
+		int placesDecimal = 1;
+		if(increment == null || increment.trim().length() == 0){
+			isIncrementProvided = false;
+		}
+		
+		if(isIncrementProvided){
+			int count = 0;
+			Double places = Double.parseDouble(increment);
+			while(places <= 1.0){
+				places = places * 10;
+				count++;
+			}
+			if(count > 0){
+				placesDecimal = count;
+			}
+		}
 		
 		List<CSVRecord> records = CSVRecordCache.getCSVRecordList(ticker);
 		
@@ -114,16 +134,16 @@ public class MainPageController {
 			
 			double time = r.getTime().getHr() * 60d * 60d  + r.getTime().getMin() * 60d + r.getTime().getSec();
 			
-			if(time >= startTimeInSeconds.doubleValue() && time <= endTimeInSeconds.doubleValue()){
+			if(time >= startTimeInSeconds && time <= endTimeInSeconds){
 				return true;
 			}
 			return false;
 		}).collect(Collectors.toList());
 
-		Collections.sort(records);
+		//Collections.sort(records);
 		
 		String toReturn = "var csvResult =  [ { 'name' : '" + ticker + "', 'data' : [";
-		Map<String,List<CSVRecord>> map = new TreeMap<>();
+		/*Map<String,List<CSVRecord>> map = new TreeMap<>();
 		for(CSVRecord rec : records){
 			List<CSVRecord> csvRecs = map.get(rec.getTime().getHr() + "" + rec.getTime().getMin());
 			if(csvRecs == null){
@@ -131,22 +151,94 @@ public class MainPageController {
 			}
 			csvRecs.add(rec);
 			map.put(rec.getTime().getHr() + "_" + rec.getTime().getMin(), csvRecs);
-		}
+		}*/
 		
-		Iterator<String> itr = map.keySet().iterator();
-		while(itr.hasNext()){
+		//Iterator<String> itr = map.keySet().iterator();
+		/*while(itr.hasNext()){
 			String key = itr.next();
 			List<CSVRecord> list = map.get(key);
 			double val = 0.0;
 			for(CSVRecord i : list){
 				val += i.getSize();
 			}
-			toReturn += " [ Date.UTC(1970,1,1, " + key.split("_")[0] + ","+key.split("_")[1] + "," + 0+") , "+val +"] ,";
+			
+			
+			
+			toReturn += "[ " + + "] ,";
+		}*/
+		
+		
+		Map<Double,Long> map = new TreeMap<>();
+		for(CSVRecord rec : records){
+			double y = rec.getPrice();
+			
+			if(isIncrementProvided){
+				y = round(y , placesDecimal -1);
+			}
+			
+			Long existingVal = 0l;
+			if(map.get(y) != null){
+				existingVal = map.get(y);
+			}
+			int x = rec.getSize();
+			existingVal += x;
+			map.put(y, existingVal);
 		}
 		
-		toReturn += "] } ]";
+		Iterator<Double> itr = map.keySet().iterator();
+		String categories = " var categories = [";
+		while(itr.hasNext()){
+			double key = itr.next();
+			Long val = map.get(key);
+			toReturn += "[" + key + "," + val + "],";
+			categories += "'" + key + "'" + ",";
+			
+		}
+		categories += "];";
+		toReturn += "] } ];";
+		toReturn += categories;
 		Gson gson = new Gson();
 		return toReturn;
 	}
+	
+	/**
+	 * 
+	 * @param s
+	 * @return
+	 */
+	public double getSecondsFromTimeInput(String s){
+		
+		double seconds = 0.0;
+		if(s != null && s.length() > 0){
+			String[] split = s.split(":");
+			if(split.length == 1){
+				seconds = Double.parseDouble(split[0])*60*60;
+			}else if(split.length == 2){
+				seconds = Double.parseDouble(split[0])*60*60 + Double.parseDouble(split[1])*60;
+			}else if(split.length == 3){
+				seconds = Double.parseDouble(split[0])*60*60 + Double.parseDouble(split[1])*60 + Double.parseDouble(split[2]);
+			}else if(split.length == 4){
+				seconds = Double.parseDouble(split[0])*60*60 + Double.parseDouble(split[1])*60 + Double.parseDouble(split[2]) + Double.parseDouble(split[3])* 0.001;
+			}
+		}
+		return seconds;
+		
+	}
+	
+	/**
+	 * 
+	 * @param value
+	 * @param places
+	 * @return
+	 */
+	private double round(double value, int places) {
+	    if (places < 0) throw new IllegalArgumentException();
+	 
+	    BigDecimal bd = new BigDecimal(Double.toString(value));
+	    bd = bd.setScale(places, RoundingMode.HALF_UP);
+	    return bd.doubleValue();
+	}
+	
+	
 
 }

@@ -39,6 +39,8 @@ function ChartControl(chartDiv){
 	 */
 	this.chartProviderObj = null;
 	
+	this.categories = null;
+	
 	/**
 	 * 
 	 */
@@ -50,6 +52,7 @@ function ChartControl(chartDiv){
 		var xAxis = this.xAxis;
 		var yAxis = this.yAxis;
 		var series = this.series;
+		var categories = this.categories;
 		
 		Highcharts.chart(chartDiv , {
 		    chart: {
@@ -62,23 +65,33 @@ function ChartControl(chartDiv){
 		    subtitle: {
 		        text: chartSubTitle ? chartSubTitle : ''
 		    },
+		    //categories:categories,
 		    xAxis: {
-		    	type: 'datetime',
+		    	/*type: 'datetime',
 		    	dateTimeLabelFormats:{
 		    	    second: '%H:%M:%S',
 		    	    minute: '%H:%M',
 		    	    hour: '%H:%M'
+		    	}*/
+		    	title:{
+		    		text : xAxis.title
 		    	}
 		    },
 		    yAxis: {
-		        min: 0,
+		        
 		        title: {
 		            text: yAxis.title
 		        }
 		    },
 		  
 		    plotOptions: {
-		        column: {
+		        /*column: {
+		        	dataLabels: {
+		                enabled: true
+		            },
+		            enableMouseTracking: true
+		        },
+		        bar: {
 		        	dataLabels: {
 		                enabled: true
 		            },
@@ -89,9 +102,10 @@ function ChartControl(chartDiv){
 		                enabled: true
 		            },
 		            enableMouseTracking: false
-		        }
+		        }*/
 		    
 		    },
+		    
 		    series: series
 		});
 		

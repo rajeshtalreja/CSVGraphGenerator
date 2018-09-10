@@ -1,6 +1,6 @@
 $(document).ready(function(){
 	
-	$("#slider-range").slider({
+	/*$("#slider-range").slider({
 		range: true,
 		min: 0,
 		max: 1439,
@@ -55,21 +55,23 @@ $(document).ready(function(){
 			var chartType = $("#chartType").val();
 			getChartData(ticker,time1,time2,chartType);
 		}
-	});
-
+	});*/
 	$("#ticker").prop("selectedIndex", 1);
+	$('#ticker').select2();
+	$('#chartType').select2();
 	drawChart();
 });
 
 function drawChart(){
-	var startTime = $('.slider-time').text().trim(); // for slider with single knob or lower value of range
-	var endTime = $('.slider-time2').text().trim();  // for highest value of range
+	var startTime = $('#startTime').val().trim(); // for slider with single knob or lower value of range
+	var endTime = $('#endTime').val().trim();  // for highest value of range
 	var ticker = $("#ticker").val();
 	var chartType = $("#chartType").val();
-	getChartData(ticker,startTime,endTime,chartType);
+	var increment = $("#increment").val();
+	getChartData(ticker,startTime,endTime,chartType,increment);
 }
 
-function getChartData(ticker,startTime,endTime,chartType){
+function getChartData(ticker,startTime,endTime,chartType,increment){
 	//var ticker = $("#ticker").val();
 	//var startTime = $("#timepickerStart").val();
 	//var endTime = $("#timepickerEnd").val();
@@ -79,7 +81,7 @@ function getChartData(ticker,startTime,endTime,chartType){
 		{
 			url: "getChartData.htm", 
 			mrthod:'post',
-			data:'ticker='+ticker+"&startTime="+startTime+"&endTime="+endTime,
+			data:'ticker='+ticker+"&startTime="+startTime+"&endTime="+endTime+"&increment="+increment,
 			success: function(result){
 				
 				setTimeout(function(){ 
@@ -87,7 +89,7 @@ function getChartData(ticker,startTime,endTime,chartType){
 					chartControl.chartType = chartType;
 					chartControl.chartTitle = 'Ticker vs Trades Size';
 					var xAxis = new ChartXAxis();
-					xAxis.title = 'Ticker';
+					xAxis.title = 'Price';
 					chartControl.xAxis = xAxis;
 					var yAxis = new ChartYAxis();
 					yAxis.title = 'Trades Size';
@@ -98,6 +100,7 @@ function getChartData(ticker,startTime,endTime,chartType){
 					var arr = [];
 					eval(result)
 					chartControl.series = csvResult;
+					chartControl.categories = categories;
 					chartControl.renderChart();
 					$("#loadingDiv").hide();
 					$("#chartDiv").css({'visibility':'visible'});
